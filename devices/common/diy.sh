@@ -23,7 +23,7 @@ sed -i -e '$a /etc/bench.log' \
 sed -i -e '/^\/etc\/profile/d' \
         -e '/^\/etc\/shinit/d' \
         package/base-files/Makefile
-sed -i "s/192.168.1/10.0.0/" package/base-files/files/bin/config_generate
+sed -i "s/192.168.1.1/192.168.1.200/" package/base-files/files/bin/config_generate
 
 sed -i "s#false; \\\#true; \\\#" include/download.mk
 
@@ -41,7 +41,7 @@ echo "$(date +"%s")" >version.date
 sed -i '/$(curdir)\/compile:/c\$(curdir)/compile: package/opkg/host/compile' package/Makefile
 sed -i "s/DEFAULT_PACKAGES:=/DEFAULT_PACKAGES:=luci-app-advancedplus luci-app-firewall luci-app-package-manager luci-app-upnp luci-app-syscontrol \
 luci-app-wizard luci-base luci-compat luci-lib-ipkg luci-lib-fs \
-coremark wget-ssl curl autocore htop nano zram-swap kmod-lib-zstd kmod-tcp-bbr bash openssh-sftp-server block-mount resolveip ds-lite swconfig luci-app-fan luci-app-filemanager luci-app-wifihistory /" include/target.mk
+coremark wget-ssl curl autocore htop nano zram-swap kmod-lib-zstd kmod-tcp-bbr bash openssh-sftp-server block-mount resolveip ds-lite swconfig luci-app-fan luci-app-wifihistory /" include/target.mk
 
 sed -i "s/^.*vermagic$/\techo '1' > \$(LINUX_DIR)\/.vermagic/" include/kernel-defaults.mk
 
@@ -86,3 +86,35 @@ sed -i "s/OpenWrt/Kwrt/g" package/base-files/files/bin/config_generate package/b
 sed -i -e "s/set \${s}.country='\${country || ''}'/set \${s}.country='\${country || \"CN\"}'/g" -e "s/set \${s}.disabled=.*/set \${s}.disabled='0'/" package/network/config/wifi-scripts/files/lib/wifi/mac80211.uc
 
 rm -rf package/feeds/packages/jool
+
+# =========================================================
+# 定制：清理广告、修改后台密码与IP
+# =========================================================
+
+# 将 Kiddin9 默认设置里的 10.0.0.1 全部替换为 192.168.1.200
+sed -i 's/10.0.0.1/192.168.1.200/g' feeds/kiddin9/my-default-settings/files/etc/uci-defaults/99-default-settings
+
+# 1. 删除默认赞助广告链接
+rm -rf feeds/kiddin9/my-default-settings/files/usr/lib/lua/luci/view/admin_status/index/links.htm
+
+# 2. 修改后台默认 root 密码为 12345678
+sed -i 's|echo "root"|echo "12345678"|g' feeds/kiddin9/my-default-settings/files/etc/uci-defaults/99-default-settings
+
+# =========================================================
+# 定制：Wi-Fi 强制开启与密码设置
+# =========================================================
+# 创建一个在首次开机时自动运行的底层脚本
+mkdir -p diy/package/base-files/files/etc/uci-defaults
+cat > diy/package/base-files/files/etc/uci-defaults/zz-custom-wifi <<EOF
+#!/bin/sh
+
+uci set wireless.default_radio0.encryption='sae-mixed'
+uci set wireless.default_radio0.key='12345678'
+uci set wireless.default_radio1.encryption='psk2'
+uci set wireless.default_radio1.key='12345678'
+
+uci commit wireless
+exit 0
+EOF
+# 赋予该脚本开机执行权限
+chmod +x diy/package/base-files/files/etc/uci-defaults/zz-custom-wifi
