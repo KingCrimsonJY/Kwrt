@@ -23,7 +23,7 @@ sed -i -e '$a /etc/bench.log' \
 sed -i -e '/^\/etc\/profile/d' \
         -e '/^\/etc\/shinit/d' \
         package/base-files/Makefile
-sed -i "s/192.168.1.1/192.168.1.200/" package/base-files/files/bin/config_generate
+sed -i "s/192.168.1/10.0.0/" package/base-files/files/bin/config_generate
 
 sed -i "s#false; \\\#true; \\\#" include/download.mk
 
@@ -88,11 +88,8 @@ sed -i -e "s/set \${s}.country='\${country || ''}'/set \${s}.country='\${country
 rm -rf package/feeds/packages/jool
 
 # =========================================================
-# 定制：清理广告、修改后台密码与IP
+# 定制：清理广告、修改后台密码
 # =========================================================
-
-# 将 Kiddin9 默认设置里的 10.0.0.1 全部替换为 192.168.1.200
-sed -i 's/10.0.0.1/192.168.1.200/g' feeds/kiddin9/my-default-settings/files/etc/uci-defaults/99-default-settings
 
 # 1. 删除默认赞助广告链接
 rm -rf feeds/kiddin9/my-default-settings/files/usr/lib/lua/luci/view/admin_status/index/links.htm
